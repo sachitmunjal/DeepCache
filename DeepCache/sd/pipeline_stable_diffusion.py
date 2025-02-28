@@ -38,6 +38,7 @@ from diffusers.pipelines.stable_diffusion.safety_checker import StableDiffusionS
 
 from .unet_2d_condition import UNet2DConditionModel
 from .pipeline_utils import DiffusionPipeline
+from ..flops import count_ops_and_params
 
 
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
@@ -747,7 +748,22 @@ class StableDiffusionPipeline(DiffusionPipeline, TextualInversionLoaderMixin, Lo
                 latent_model_input = self.scheduler.scale_model_input(latent_model_input, t)
 
                 if i in interval_seq:
-                    prv_features = None            
+                    prv_features = None      
+                
+                example_inputs = {
+                    'sample': latent_model_input, 
+                    'timestep': t,
+                    'encoder_hidden_states': prompt_embeds,
+                    'cross_attention_kwargs': cross_attention_kwargs,
+                    'replicate_prv_feature': prv_features,
+                    'quick_replicate': cache_interval>1,
+                    'cache_layer_id': cache_layer_id,
+                    'cache_block_id': cache_block_id,
+                    'return_dict': False,
+                }
+                macs, nparams = count_ops_and_params(self.unet, example_inputs=example_inputs, layer_wise=False)
+                print("#Params: {:.4f} M".format(nparams/1e6))
+                print("#MACs: {:.4f} G".format(macs/1e9))
 
                 # predict the noise residual
                 noise_pred, prv_features = self.unet(
