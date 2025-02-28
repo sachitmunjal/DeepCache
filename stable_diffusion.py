@@ -1,7 +1,7 @@
 import os
 import time
 import logging
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s',  force=True)
 
 import torch
 from torchvision.utils import save_image
@@ -65,6 +65,7 @@ if __name__ == "__main__":
 
     save_image([ori_output[0], deepcache_output[0]], "output.png")
     logging.info("Saved to output.png. Done!")
+    print('hello')
 
 
 
