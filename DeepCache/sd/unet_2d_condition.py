@@ -42,10 +42,7 @@ from diffusers.models.embeddings import (
     Timesteps,
 )
 
-if diffusers.__version__ >'0.25':
-    from diffusers.models.embeddings import GLIGENTextBoundingboxProjection as PositionNet
-else:
-    from diffusers.models.embeddings import PositionNet
+from diffusers.models.embeddings import GLIGENTextBoundingboxProjection as PositionNet
     
 from diffusers.models.modeling_utils import ModelMixin
 
