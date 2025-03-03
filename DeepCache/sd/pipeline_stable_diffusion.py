@@ -766,7 +766,7 @@ class StableDiffusionPipeline(DiffusionPipeline, TextualInversionLoaderMixin, Lo
                 macs, nparams = count_ops_and_params(self.unet, example_inputs=example_inputs, layer_wise=False)
                 print("#Params: {:.4f} M".format(nparams/1e6))
                 print("#MACs: {:.4f} G".format(macs/1e9))
-                exit()
+                # exit()
         
                 # predict the noise residual
                 noise_pred, prv_features = self.unet(
