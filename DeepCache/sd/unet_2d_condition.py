@@ -34,7 +34,7 @@ from diffusers.models.embeddings import (
     ImageHintTimeEmbedding,
     ImageProjection,
     ImageTimeEmbedding,
-    # PositionNet,
+    PositionNet,
     TextImageProjection,
     TextImageTimeEmbedding,
     TextTimeEmbedding,
@@ -42,7 +42,7 @@ from diffusers.models.embeddings import (
     Timesteps,
 )
 
-from diffusers.models.embeddings import GLIGENTextBoundingboxProjection as PositionNet
+# from diffusers.models.embeddings import GLIGENTextBoundingboxProjection as PositionNet
     
 from diffusers.models.modeling_utils import ModelMixin
 
