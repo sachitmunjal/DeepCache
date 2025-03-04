@@ -1,6 +1,7 @@
 import os
 import time
 import logging
+import lpips
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s',  force=True)
 
 import torch
@@ -10,6 +11,8 @@ import argparse
 
 from DeepCache.sd.pipeline_stable_diffusion import StableDiffusionPipeline as DeepCacheStableDiffusionPipeline
 from diffusers import StableDiffusionPipeline
+
+lpips_model = lpips.LPIPS(net='alex').to("cuda:0")
 
 def set_random_seed(seed):
     torch.manual_seed(seed)
@@ -65,7 +68,27 @@ if __name__ == "__main__":
 
     save_image([ori_output[0], deepcache_output[0]], "output.png")
     logging.info("Saved to output.png. Done!")
-    print('hello')
+
+    
+    if isinstance(ori_output[0], torch.Tensor):
+        img1 = ori_output[0].unsqueeze(0).to("cuda:0")  # Add batch dimension and move to GPU
+    else:
+        img1 = F.to_tensor(ori_output[0]).unsqueeze(0).to("cuda:0")
+    
+    if isinstance(deepcache_output[0], torch.Tensor):
+        img2 = deepcache_output[0].unsqueeze(0).to("cuda:0")
+    else:
+        img2 = F.to_tensor(deepcache_output[0]).unsqueeze(0).to("cuda:0")
+    
+    # Make sure both images are in the correct range [0, 1] for LPIPS
+    img1 = img1 * 2.0 - 1.0  # Convert to range [-1, 1]
+    img2 = img2 * 2.0 - 1.0  # Convert to range [-1, 1]
+    
+    # Calculate LPIPS score
+    lpips_score = lpips_model(img1, img2)
+    
+    # Print the LPIPS score
+    print(f"LPIPS Score: {lpips_score.item()}")
 
 
 
