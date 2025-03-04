@@ -40,6 +40,7 @@ from .unet_2d_condition import UNet2DConditionModel
 from .pipeline_utils import DiffusionPipeline
 from ..flops import count_ops_and_params
 
+from scipy.stats import beta as betaa
 
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
 
@@ -95,6 +96,31 @@ def sample_from_quad_center(total_numbers, n_samples, center, pow=1.2):
     if pow <= 1:
         raise ValueError("Cannot find suitable pow. Please adjust n_samples or decrease center.")
     return indices, pow
+
+def beta_sampling_pit(T, num_steps, alpha= 0.7, beta= 0.7):
+    """
+    Generates time steps using beta sampling via the Probability Integral Transform (PIT).
+
+    Args:
+        T: Total number of time steps in the diffusion process.
+        num_steps: Number of time steps to sample.
+        alpha: Alpha parameter of the beta distribution.
+        beta: Beta parameter of the beta distribution.
+
+    Returns:
+        A numpy array of sampled time steps.
+    """
+
+    # 1. Generate uniformly sampled time steps
+    uniform_steps = np.linspace(0, 1, num_steps) #normalized ti'
+
+    # 2. Compute the inverse CDF (PPF) of the beta distribution
+    beta_steps_normalized = betaa.ppf(uniform_steps, alpha, beta)
+
+    # 3. Rescale the transformed time steps to the range [0, T-1]
+    beta_steps = beta_steps_normalized * (T - 1)
+
+    return list(beta_steps.astype(int)),1 
 
 def beta_sampling_endpoints(total_numbers, n_samples, alpha=0.2, beta=0.2):
     """
@@ -772,7 +798,8 @@ class StableDiffusionPipeline(DiffusionPipeline, TextualInversionLoaderMixin, Lo
                     num_slow_step += 1
 
                 # Samples taken from Beta Sampling to concentrate on left and right numbers 
-                interval_seq, pow = beta_sampling_endpoints(num_inference_steps, num_slow_step , 0.1 , 0.1 )
+                # beta_sampling_pit , beta_sampling_endpoints
+                interval_seq, pow = beta_sampling_pit(num_inference_steps, num_slow_step , 0.7 , 0.7 )
                 # interval_seq, pow = sample_from_quad_center(num_inference_steps, num_slow_step, center=center, pow=pow)#[0, 3, 6, 9, 12, 16, 22, 28, 35, 43,]
                 #interval_seq, pow = sample_from_quad(num_inference_steps, num_inference_steps//cache_interval, pow=pow)#[0, 3, 6, 9, 12, 16, 22, 28, 35, 43,]
         
