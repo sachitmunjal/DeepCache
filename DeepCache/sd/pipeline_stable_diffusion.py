@@ -740,7 +740,8 @@ class StableDiffusionPipeline(DiffusionPipeline, TextualInversionLoaderMixin, Lo
                 #interval_seq, pow = sample_from_quad(num_inference_steps, num_inference_steps//cache_interval, pow=pow)#[0, 3, 6, 9, 12, 16, 22, 28, 35, 43,]
         
         interval_seq = sorted(interval_seq)
-        #print(interval_seq, len(interval_seq), pow)
+        print("hello ----------------")
+        print(interval_seq, len(interval_seq), pow)
 
         with self.progress_bar(total=num_inference_steps) as progress_bar:
             #print("[INFO] Update Feature Interval = {}, Update Layer Number = {}, Update Block Number = {}".format(cache_interval, cache_layer_id, cache_block_id))
@@ -766,6 +767,7 @@ class StableDiffusionPipeline(DiffusionPipeline, TextualInversionLoaderMixin, Lo
                 macs, nparams = count_ops_and_params(self.unet, example_inputs=example_inputs, layer_wise=False)
                 print("#Params: {:.4f} M".format(nparams/1e6))
                 print("#MACs: {:.4f} G".format(macs/1e9))
+                print("i - " + i + " t - " +  t)
                 # exit()
         
                 # predict the noise residual
