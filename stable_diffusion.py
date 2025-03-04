@@ -21,7 +21,7 @@ def set_random_seed(seed):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", type=str, default='runwayml/stable-diffusion-v1-5')#model_id_v2_1 = 'stabilityai/stable-diffusion-2-1'
-    parser.add_argument("--prompt", type=str, default='a photo of an astronaut on a moon')
+    parser.add_argument("--prompt", type=str, default='dark room with volumetric light god rays shining through window onto stone fireplace in front of cloth couch')
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
 
