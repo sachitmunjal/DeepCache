@@ -798,9 +798,13 @@ class StableDiffusionPipeline(DiffusionPipeline, TextualInversionLoaderMixin, Lo
                     num_slow_step += 1
 
                 # Samples taken from Beta Sampling to concentrate on left and right numbers 
+
                 # beta_sampling_pit , beta_sampling_endpoints
                 interval_seq, pow = beta_sampling_pit(num_inference_steps, num_slow_step , 0.7 , 0.7 )
                 # interval_seq, pow = sample_from_quad_center(num_inference_steps, num_slow_step, center=center, pow=pow)#[0, 3, 6, 9, 12, 16, 22, 28, 35, 43,]
+=======
+                # interval_seq, pow = beta_sampling_endpoints(num_inference_steps, num_slow_step , 0.1 , 0.1 )
+                #  interval_seq, pow = sample_from_quad_center(num_inference_steps, num_slow_step, center=center, pow=pow)#[0, 3, 6, 9, 12, 16, 22, 28, 35, 43,]
                 #interval_seq, pow = sample_from_quad(num_inference_steps, num_inference_steps//cache_interval, pow=pow)#[0, 3, 6, 9, 12, 16, 22, 28, 35, 43,]
         
         interval_seq = sorted(interval_seq)
