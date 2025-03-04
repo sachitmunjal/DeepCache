@@ -96,6 +96,41 @@ def sample_from_quad_center(total_numbers, n_samples, center, pow=1.2):
         raise ValueError("Cannot find suitable pow. Please adjust n_samples or decrease center.")
     return indices, pow
 
+def beta_sampling_endpoints(total_numbers, n_samples, alpha=0.2, beta=0.2):
+    """
+    Generates indices using beta sampling, concentrating elements at the start and end.
+
+    Args:
+        total_numbers: The total number of possible indices (e.g., timesteps).
+        n_samples: The desired number of sample indices.
+        alpha: Alpha parameter of the beta distribution (lower values concentrate at start).
+        beta: Beta parameter of the beta distribution (lower values concentrate at end).
+
+    Returns:
+        A list of sorted indices.
+    """
+
+    if alpha <= 0 or beta <= 0:
+        raise ValueError("Alpha and beta parameters must be positive.")
+
+    # Generate samples from the beta distribution
+    beta_samples = np.random.beta(alpha, beta, n_samples)
+
+    # Scale and convert beta samples to indices
+    indices = (beta_samples * (total_numbers - 1)).astype(int)
+
+    # Ensure indices are unique and sorted
+    unique_indices = sorted(list(set(indices)))
+
+    #If there are less unique index then desired n_samples, adds random index until n_samples is reached.
+    while len(unique_indices) < n_samples:
+      random_index = np.random.randint(0, total_numbers)
+      if random_index not in unique_indices:
+        unique_indices.append(random_index)
+        unique_indices.sort()
+
+    return unique_indices[:n_samples], 1 # for handling pow 
+    
 def rescale_noise_cfg(noise_cfg, noise_pred_text, guidance_rescale=0.0):
     """
     Rescale `noise_cfg` according to `guidance_rescale`. Based on findings of [Common Diffusion Noise Schedules and
@@ -735,8 +770,10 @@ class StableDiffusionPipeline(DiffusionPipeline, TextualInversionLoaderMixin, Lo
                 num_slow_step = num_inference_steps//cache_interval
                 if num_inference_steps%cache_interval != 0:
                     num_slow_step += 1
-                
-                interval_seq, pow = sample_from_quad_center(num_inference_steps, num_slow_step, center=center, pow=pow)#[0, 3, 6, 9, 12, 16, 22, 28, 35, 43,]
+
+                # Samples taken from Beta Sampling to concentrate on left and right numbers 
+                interval_seq, pow = beta_sampling_endpoints(num_inference_steps, num_slow_step , 0.1 . 0.1 )
+                # interval_seq, pow = sample_from_quad_center(num_inference_steps, num_slow_step, center=center, pow=pow)#[0, 3, 6, 9, 12, 16, 22, 28, 35, 43,]
                 #interval_seq, pow = sample_from_quad(num_inference_steps, num_inference_steps//cache_interval, pow=pow)#[0, 3, 6, 9, 12, 16, 22, 28, 35, 43,]
         
         interval_seq = sorted(interval_seq)
