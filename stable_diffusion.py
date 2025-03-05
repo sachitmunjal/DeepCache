@@ -21,7 +21,7 @@ lpips_model = lpips.LPIPS(net="alex").to("cuda:0")
 
 # Load CLIP Model
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
-clip_model, clip_preprocess = clip.load("ViT-B/14", device=device)
+clip_model, clip_preprocess = clip.load("ViT-B/32", device=device)
 
 # Set random seed
 def set_random_seed(seed):
