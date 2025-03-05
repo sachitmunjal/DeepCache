@@ -653,6 +653,7 @@ class StableDiffusionPipeline(DiffusionPipeline, TextualInversionLoaderMixin, Lo
         pow: float = None,
         center: int = None,
         output_all_sequence: bool = False,
+        function_type: int = 1,
     ):
         r"""
         The call function to the pipeline for generation.
@@ -804,8 +805,11 @@ class StableDiffusionPipeline(DiffusionPipeline, TextualInversionLoaderMixin, Lo
 
                 # beta_sampling_pit , beta_sampling_endpoints, sample_from_analytics 
                 #interval_seq, pow = beta_sampling_pit(num_inference_steps, num_slow_step , 0.7 , 0.7 )
-                interval_seq, pow = sample_from_analytics(num_inference_steps, num_slow_step )
-                # interval_seq, pow = sample_from_quad_center(num_inference_steps, num_slow_step, center=center, pow=pow)#[0, 3, 6, 9, 12, 16, 22, 28, 35, 43,]
+                
+                if function_type==2:
+                    interval_seq, pow = sample_from_analytics(num_inference_steps, num_slow_step )
+                if function_type==1:
+                    interval_seq, pow = sample_from_quad_center(num_inference_steps, num_slow_step, center=center, pow=pow)#[0, 3, 6, 9, 12, 16, 22, 28, 35, 43,]
                 
                 # interval_seq, pow = beta_sampling_endpoints(num_inference_steps, num_slow_step , 0.1 , 0.1 )
                 # interval_seq, pow = sample_from_quad_center(num_inference_steps, num_slow_step, center=center, pow=pow)#[0, 3, 6, 9, 12, 16, 22, 28, 35, 43,]
@@ -814,6 +818,7 @@ class StableDiffusionPipeline(DiffusionPipeline, TextualInversionLoaderMixin, Lo
         interval_seq = sorted(interval_seq)
         print("hello ----------------")
         print(interval_seq, len(interval_seq), pow)
+        print("function-type: " + str(function_type))
 
         with self.progress_bar(total=num_inference_steps) as progress_bar:
             #print("[INFO] Update Feature Interval = {}, Update Layer Number = {}, Update Block Number = {}".format(cache_interval, cache_layer_id, cache_block_id))
