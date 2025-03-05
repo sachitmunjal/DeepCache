@@ -136,8 +136,8 @@ if __name__ == "__main__":
 
     logging.info("======== Final Results ========")
     logging.info(f"Average Baseline Time: {avg_baseline_time:.2f} seconds")
-    logging.info(f"Average DeepCache Time: {avg_deepcache_time_1:.2f} seconds")
-    logging.info(f"Average LPIPS Score: {avg_lpips_1:.4f}")
+    logging.info(f"Average DeepCache Time - 1 (quad function): {avg_deepcache_time_1:.2f} seconds")
+    logging.info(f"Average LPIPS Score - 1 (quad function): {avg_lpips_1:.4f}")
     
-    logging.info(f"Average DeepCache Time: {avg_deepcache_time_2:.2f} seconds")
-    logging.info(f"Average LPIPS Score: {avg_lpips_2:.4f}")
+    logging.info(f"Average DeepCache Time - 2 (Our Function): {avg_deepcache_time_2:.2f} seconds")
+    logging.info(f"Average LPIPS Score - 2 (Our Function): {avg_lpips_2:.4f}")
