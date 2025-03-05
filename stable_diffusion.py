@@ -55,7 +55,7 @@ def compute_lpips(img1, img2):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", type=str, default="runwayml/stable-diffusion-v1-5")
-    parser.add_argument("--prompt_file", type=str, required=True, help="Path to the text file containing prompts", default="prompts.txt")
+    parser.add_argument("--prompt_file", type=str, help="Path to the text file containing prompts", default="prompts.txt")
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
 
