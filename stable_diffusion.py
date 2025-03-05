@@ -4,7 +4,7 @@ import logging
 import lpips
 import torch
 import argparse
-import clip
+import open_clip
 import torch.nn.functional as F
 from torchvision.utils import save_image
 from torchvision import transforms
@@ -21,7 +21,12 @@ lpips_model = lpips.LPIPS(net="alex").to("cuda:0")
 
 # Load CLIP Model
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
-clip_model, clip_preprocess = clip.load("ViT-g-14", device=device)
+# Load ViT-g-14 using open_clip
+clip_model, _, clip_preprocess = open_clip.create_model_and_transforms(
+    'ViT-g-14', 
+    pretrained='laion2b_s34b_b88k', 
+    device=device
+)
 
 # Set random seed
 def set_random_seed(seed):
@@ -55,7 +60,7 @@ def compute_clip_score(image, prompt):
     image = transforms.ToPILImage()(image.cpu())  # Convert tensor to PIL
     image = clip_preprocess(image).unsqueeze(0).to(device)
 
-    text = clip.tokenize([prompt]).to(device)
+    text = open_clip.tokenize([prompt]).to(device)  # Use open_clip for tokenization
 
     with torch.no_grad():
         image_features = clip_model.encode_image(image)
