@@ -72,6 +72,7 @@ def sample_gaussian_centered(n=1000, sample_size=100, std_dev=100):
     return samples
 
 def sample_from_analytics( total_numbers , n_samples ) : 
+    return list([ 0, 2 , 5 , 9, 14 , 19 , 25 , 32 , 40 , 48 ] ), 1 
     return list([0 , 9 , 17, 24 , 30 , 35, 39, 43, 45 , 47]), 1
     
 def sample_from_quad(total_numbers, n_samples, pow=1.2):
