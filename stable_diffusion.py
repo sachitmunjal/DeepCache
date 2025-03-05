@@ -171,11 +171,12 @@ if __name__ == "__main__":
 
     logging.info("======== Final Results ========")
     logging.info(f"Average Baseline Time: {avg(baseline_times):.2f} seconds")
+    print()
     logging.info(f"Average DeepCache Time - 1: {avg(deepcache_times_1):.2f} seconds")
     logging.info(f"Average LPIPS Score - 1: {avg(lpips_scores_1):.4f}")
     logging.info(f"Average CLIP Score - 1: {avg(clip_scores_1):.4f}")
     logging.info(f"Average MS-SSIM Score - 1: {avg(msssim_scores_1):.4f}")
-
+    print()
     logging.info(f"Average DeepCache Time - 2: {avg(deepcache_times_2):.2f} seconds")
     logging.info(f"Average LPIPS Score - 2: {avg(lpips_scores_2):.4f}")
     logging.info(f"Average CLIP Score - 2: {avg(clip_scores_2):.4f}")
