@@ -8,7 +8,7 @@ import clip
 import torch.nn.functional as F
 from torchvision.utils import save_image
 from torchvision import transforms
-from torchvision.metrics import structural_similarity
+from pytorch_msssim import ms_ssim
 from DeepCache.sd.pipeline_stable_diffusion import StableDiffusionPipeline as DeepCacheStableDiffusionPipeline
 from diffusers import StableDiffusionPipeline
 from PIL import Image
@@ -69,7 +69,10 @@ def compute_clip_score(image, prompt):
 
 # Compute MS-SSIM Score
 def compute_msssim(img1, img2):
-    return structural_similarity(img1.unsqueeze(0), img2.unsqueeze(0), data_range=1.0)
+    img1 = img1.unsqueeze(0).to("cuda:0")  # Add batch dimension and move to GPU
+    img2 = img2.unsqueeze(0).to("cuda:0")
+
+    return ms_ssim(img1, img2, data_range=1.0).item()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
