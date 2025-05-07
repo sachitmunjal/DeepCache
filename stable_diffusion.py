@@ -11,6 +11,7 @@ from torchvision import transforms
 from pytorch_msssim import ms_ssim
 from DeepCache.sd.pipeline_stable_diffusion import StableDiffusionPipeline as DeepCacheStableDiffusionPipeline
 from diffusers import StableDiffusionPipeline
+from torchmetrics.image.fid import FrechetInceptionDistance
 from PIL import Image
 
 # Configure logging
@@ -102,6 +103,10 @@ if __name__ == "__main__":
     msssim_scores_1 = []
     msssim_scores_2 = []
 
+    # Initialize FID metrics
+    fid_metric_1 = FrechetInceptionDistance(feature=2048).to("cuda:0")
+    fid_metric_2 = FrechetInceptionDistance(feature=2048).to("cuda:0")
+
     for idx, prompt in enumerate(prompts):
         logging.info(f"Processing prompt {idx + 1}/{len(prompts)}: {prompt}")
 
@@ -131,6 +136,9 @@ if __name__ == "__main__":
         clip_score = compute_clip_score(deepcache_output[0], prompt)
         msssim_score = compute_msssim(ori_output[0], deepcache_output[0])
 
+        fid_metric_1.update(ori_output[0].unsqueeze(0).to("cuda:0"), real=True)
+        fid_metric_1.update(deepcache_output[0].unsqueeze(0).to("cuda:0"), real=False)
+
         logging.info(f"LPIPS Score: {lpips_score:.4f}")
         logging.info(f"CLIP Score: {clip_score:.4f}")
         logging.info(f"MS-SSIM Score: {msssim_score:.4f}")
@@ -157,6 +165,9 @@ if __name__ == "__main__":
         clip_score = compute_clip_score(deepcache_output[0], prompt)
         msssim_score = compute_msssim(ori_output[0], deepcache_output[0])
 
+        fid_metric_2.update(ori_output[0].unsqueeze(0).to("cuda:0"), real=True)
+        fid_metric_2.update(deepcache_output[0].unsqueeze(0).to("cuda:0"), real=False)
+
         logging.info(f"LPIPS Score: {lpips_score:.4f}")
         logging.info(f"CLIP Score: {clip_score:.4f}")
         logging.info(f"MS-SSIM Score: {msssim_score:.4f}")
@@ -168,6 +179,9 @@ if __name__ == "__main__":
     # Compute Averages
     def avg(lst):
         return sum(lst) / len(lst)
+
+    fid_score_1 = fid_metric_1.compute().item()
+    fid_score_2 = fid_metric_2.compute().item()
 
     logging.info("======== Final Results ========")
     logging.info(f"Average Baseline Time: {avg(baseline_times):.2f} seconds")
@@ -181,3 +195,6 @@ if __name__ == "__main__":
     logging.info(f"Average LPIPS Score - 2: {avg(lpips_scores_2):.4f}")
     logging.info(f"Average CLIP Score - 2: {avg(clip_scores_2):.4f}")
     logging.info(f"Average MS-SSIM Score - 2: {avg(msssim_scores_2):.4f}")
+
+    logging.info(f"FID Score - 1: {fid_score_1:.4f}\n")
+    logging.info(f"FID Score - 2: {fid_score_2:.4f}")
