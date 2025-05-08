@@ -17,8 +17,8 @@ from PIL import Image
 # Configure logging
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s", force=True)
 
-# Load LPIPS model for perceptual similarity
-lpips_model = lpips.LPIPS(net="alex").to("cuda:0")
+# # Load LPIPS model for perceptual similarity
+# lpips_model = lpips.LPIPS(net="alex").to("cuda:0")
 
 # Load CLIP Model
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
@@ -75,6 +75,13 @@ def compute_msssim(img1, img2):
 
     return ms_ssim(img1, img2, data_range=1.0).item()
 
+def to_uint8(image_tensor):
+    """
+    Convert a float image tensor in [0, 1] to uint8 in [0, 255]
+    """
+    image_tensor = image_tensor.clamp(0, 1) * 255
+    return image_tensor.to(torch.uint8)
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", type=str, default="runwayml/stable-diffusion-v1-5")
@@ -91,6 +98,11 @@ if __name__ == "__main__":
 
     logging.info("Loading DeepCache Model...")
     deepcache_pipe = DeepCacheStableDiffusionPipeline.from_pretrained(args.model, torch_dtype=torch.float16).to("cuda:0")
+
+    # Create output directories
+    os.makedirs("outputs/baseline", exist_ok=True)
+    os.makedirs("outputs/deepcache1", exist_ok=True)
+    os.makedirs("outputs/deepcache2", exist_ok=True)
 
     # Metrics storage
     baseline_times = []
@@ -117,6 +129,7 @@ if __name__ == "__main__":
         baseline_time = time.time() - start_time
         logging.info(f"Baseline Time: {baseline_time:.2f} seconds")
         baseline_times.append(baseline_time)
+        save_image(ori_output[0], f"outputs/baseline/{idx:03d}_baseline.png")
 
         # DeepCache Generation - quad function
         logging.info("Running DeepCache for quad function...")
@@ -130,20 +143,21 @@ if __name__ == "__main__":
         deepcache_time_1 = time.time() - start_time
         logging.info(f"DeepCache Time: {deepcache_time_1:.2f} seconds")
         deepcache_times_1.append(deepcache_time_1)
+        save_image(deepcache_output[0], f"outputs/deepcache1/{idx:03d}_deepcache1.png")
 
         # Compute Metrics
-        lpips_score = compute_lpips(ori_output[0], deepcache_output[0])
+        # lpips_score = compute_lpips(ori_output[0], deepcache_output[0])
         clip_score = compute_clip_score(deepcache_output[0], prompt)
         msssim_score = compute_msssim(ori_output[0], deepcache_output[0])
 
-        fid_metric_1.update(ori_output[0].unsqueeze(0).to("cuda:0"), real=True)
-        fid_metric_1.update(deepcache_output[0].unsqueeze(0).to("cuda:0"), real=False)
+        fid_metric_1.update(to_uint8(ori_output[0]).unsqueeze(0).to("cuda:0"), real=True)
+        fid_metric_1.update(to_uint8(deepcache_output[0]).unsqueeze(0).to("cuda:0"), real=False)
 
-        logging.info(f"LPIPS Score: {lpips_score:.4f}")
+        # logging.info(f"LPIPS Score: {lpips_score:.4f}")
         logging.info(f"CLIP Score: {clip_score:.4f}")
         logging.info(f"MS-SSIM Score: {msssim_score:.4f}")
 
-        lpips_scores_1.append(lpips_score)
+        # lpips_scores_1.append(lpips_score)
         clip_scores_1.append(clip_score)
         msssim_scores_1.append(msssim_score)
 
@@ -159,20 +173,21 @@ if __name__ == "__main__":
         deepcache_time_2 = time.time() - start_time
         logging.info(f"DeepCache Time: {deepcache_time_2:.2f} seconds")
         deepcache_times_2.append(deepcache_time_2)
+        save_image(deepcache_output[0], f"outputs/deepcache2/{idx:03d}_deepcache2.png")
 
         # Compute Metrics
-        lpips_score = compute_lpips(ori_output[0], deepcache_output[0])
+        # lpips_score = compute_lpips(ori_output[0], deepcache_output[0])
         clip_score = compute_clip_score(deepcache_output[0], prompt)
         msssim_score = compute_msssim(ori_output[0], deepcache_output[0])
 
-        fid_metric_2.update(ori_output[0].unsqueeze(0).to("cuda:0"), real=True)
-        fid_metric_2.update(deepcache_output[0].unsqueeze(0).to("cuda:0"), real=False)
+        fid_metric_2.update(to_uint8(ori_output[0]).unsqueeze(0).to("cuda:0"), real=True)
+        fid_metric_2.update(to_uint8(deepcache_output[0]).unsqueeze(0).to("cuda:0"), real=False)
 
-        logging.info(f"LPIPS Score: {lpips_score:.4f}")
+        # logging.info(f"LPIPS Score: {lpips_score:.4f}")
         logging.info(f"CLIP Score: {clip_score:.4f}")
         logging.info(f"MS-SSIM Score: {msssim_score:.4f}")
 
-        lpips_scores_2.append(lpips_score)
+        # lpips_scores_2.append(lpips_score)
         clip_scores_2.append(clip_score)
         msssim_scores_2.append(msssim_score)
 
@@ -187,14 +202,16 @@ if __name__ == "__main__":
     logging.info(f"Average Baseline Time: {avg(baseline_times):.2f} seconds")
     print()
     logging.info(f"Average DeepCache Time - 1: {avg(deepcache_times_1):.2f} seconds")
-    logging.info(f"Average LPIPS Score - 1: {avg(lpips_scores_1):.4f}")
-    logging.info(f"Average CLIP Score - 1: {avg(clip_scores_1):.4f}")
+    # logging.info(f"Average LPIPS Score - 1: {avg(lpips_scores_1):.4f}")
+    logging.info(f"Average CLIP Score - 1: {avg(clip_scores_1)*100:.4f}")
     logging.info(f"Average MS-SSIM Score - 1: {avg(msssim_scores_1):.4f}")
     print()
     logging.info(f"Average DeepCache Time - 2: {avg(deepcache_times_2):.2f} seconds")
-    logging.info(f"Average LPIPS Score - 2: {avg(lpips_scores_2):.4f}")
-    logging.info(f"Average CLIP Score - 2: {avg(clip_scores_2):.4f}")
+    # logging.info(f"Average LPIPS Score - 2: {avg(lpips_scores_2):.4f}")
+    logging.info(f"Average CLIP Score - 2: {avg(clip_scores_2)*100:.4f}")
     logging.info(f"Average MS-SSIM Score - 2: {avg(msssim_scores_2):.4f}")
 
-    logging.info(f"FID Score - 1: {fid_score_1:.4f}\n")
+    print()
+
+    logging.info(f"FID Score - 1: {fid_score_1:.4f}")
     logging.info(f"FID Score - 2: {fid_score_2:.4f}")
