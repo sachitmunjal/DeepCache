@@ -102,6 +102,32 @@ def sample_from_quad_center(total_numbers, n_samples, center, pow=1.2):
         raise ValueError("Cannot find suitable pow. Please adjust n_samples or decrease center.")
     return indices, pow
 
+def get_indices( rel_log_magnitude_change : list, no_of_time_samples= 50, reduction= 10): # size is 1000 sized array 
+    rel_log_magnitude_change.reverse()
+    len_of_log_array = len(rel_log_magnitude_change)
+    compressed_pdf = [] 
+    for i in range(0, len_of_log_array, 20) :
+        compressed_pdf.append( float(sum(rel_log_magnitude_change[i: i+ int(len_of_log_array/no_of_time_samples) ]))) 
+
+    compressed_pdf = np.array(compressed_pdf)
+    sum_of_pdf = sum(compressed_pdf)
+    bin_sum = sum_of_pdf/float(reduction-1 ) 
+
+    final_array = [] 
+    prev = 0
+    moving_sum = 0.0  
+
+    for i in range(no_of_time_samples) : 
+        moving_sum += float(compressed_pdf[i])
+        if( moving_sum >= prev ): 
+            final_array.append(int(i)) 
+            prev += bin_sum 
+
+    final_array.append(no_of_time_samples-1)
+    final_array = final_array[:10]
+
+    return final_array,1
+
 def beta_sampling_pit(T, num_steps, alpha= 0.7, beta= 0.7):
     """
     Generates time steps using beta sampling via the Probability Integral Transform (PIT).
