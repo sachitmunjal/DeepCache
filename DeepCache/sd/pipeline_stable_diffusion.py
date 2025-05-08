@@ -41,6 +41,7 @@ from .pipeline_utils import DiffusionPipeline
 from ..flops import count_ops_and_params
 
 from scipy.stats import beta as betaa
+import json 
 
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
 
@@ -682,6 +683,7 @@ class StableDiffusionPipeline(DiffusionPipeline, TextualInversionLoaderMixin, Lo
         center: int = None,
         output_all_sequence: bool = False,
         function_type: int = 1,
+        distribution: str =  "distribution.json"# The distribution of low frequency data for selecting timesteps in deepcache
     ):
         r"""
         The call function to the pipeline for generation.
@@ -807,7 +809,7 @@ class StableDiffusionPipeline(DiffusionPipeline, TextualInversionLoaderMixin, Lo
             generator,
             latents,
         )
-
+        
         # 6. Prepare extra step kwargs. TODO: Logic should ideally just be moved out of the pipeline
         extra_step_kwargs = self.prepare_extra_step_kwargs(generator, eta)
 
@@ -835,7 +837,11 @@ class StableDiffusionPipeline(DiffusionPipeline, TextualInversionLoaderMixin, Lo
                 #interval_seq, pow = beta_sampling_pit(num_inference_steps, num_slow_step , 0.7 , 0.7 )
                 
                 if function_type==2:
-                    interval_seq, pow = sample_from_analytics(num_inference_steps, num_slow_step )
+                    with open(distribution, 'r') as f : 
+                        my_distribution = json.load(f) 
+                    interval_seq, pow = get_indices(my_distribution)
+                    # interval_seq, pow = sample_from_analytics(num_inference_steps, num_slow_step )
+
                 if function_type==1:
                     interval_seq, pow = sample_from_quad_center(num_inference_steps, num_slow_step, center=center, pow=pow)#[0, 3, 6, 9, 12, 16, 22, 28, 35, 43,]
                 
@@ -844,9 +850,9 @@ class StableDiffusionPipeline(DiffusionPipeline, TextualInversionLoaderMixin, Lo
                 #interval_seq, pow = sample_from_quad(num_inference_steps, num_inference_steps//cache_interval, pow=pow)#[0, 3, 6, 9, 12, 16, 22, 28, 35, 43,]
         
         interval_seq = sorted(interval_seq)
-        print("hello ----------------")
-        print(interval_seq, len(interval_seq), pow)
-        print("function-type: " + str(function_type))
+        # print("hello ----------------")
+        # print(interval_seq, len(interval_seq), pow)
+        # print("function-type: " + str(function_type))
 
         with self.progress_bar(total=num_inference_steps) as progress_bar:
             #print("[INFO] Update Feature Interval = {}, Update Layer Number = {}, Update Block Number = {}".format(cache_interval, cache_layer_id, cache_block_id))
@@ -869,10 +875,10 @@ class StableDiffusionPipeline(DiffusionPipeline, TextualInversionLoaderMixin, Lo
                     'cache_block_id': cache_block_id,
                     'return_dict': False,
                 }
-                macs, nparams = count_ops_and_params(self.unet, example_inputs=example_inputs, layer_wise=False)
-                print("#Params: {:.4f} M".format(nparams/1e6))
-                print("#MACs: {:.4f} G".format(macs/1e9))
-                print("i - " + str(i) + " t - " +  str(t))
+                # macs, nparams = count_ops_and_params(self.unet, example_inputs=example_inputs, layer_wise=False)
+                # print("#Params: {:.4f} M".format(nparams/1e6))
+                # print("#MACs: {:.4f} G".format(macs/1e9))
+                # print("i - " + str(i) + " t - " +  str(t))
                 # exit()
         
                 # predict the noise residual
